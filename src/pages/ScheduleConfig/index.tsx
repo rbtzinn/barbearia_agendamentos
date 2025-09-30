@@ -13,8 +13,9 @@ export default function ScheduleConfig() {
   const [weekly, setWeekly] = useState<WeeklySchedule>({});
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('18:00');
-  const [interval, setInterval] = useState<number | ''>(''); // 👈 começa vazio
+  const [interval, setInterval] = useState<number | ''>(''); 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null); // 👈 estado de erro
   const navigate = useNavigate();
 
   const days = [
@@ -28,8 +29,10 @@ export default function ScheduleConfig() {
   ] as const;
 
   function generateSlots() {
+    setError(null);
+
     if (interval === '' || interval <= 0) {
-      alert('Informe um intervalo válido em minutos.');
+      setError('Informe um intervalo válido em minutos.');
       return;
     }
 
@@ -57,12 +60,19 @@ export default function ScheduleConfig() {
   }
 
   async function save() {
+    setError(null);
+
     if (interval === '' || interval <= 0) {
-      alert('Informe um intervalo válido em minutos.');
+      setError('Informe um intervalo válido em minutos.');
       return;
     }
-    await setWeeklySchedule(shopId, weekly);
-    navigate('/barber/share?shopId=' + shopId);
+
+    try {
+      await setWeeklySchedule(shopId, weekly);
+      navigate('/barber/share?shopId=' + shopId);
+    } catch (e: any) {
+      setError('Erro ao salvar: ' + e.message);
+    }
   }
 
   const handleDayToggle = (dayKey: string) => {
@@ -106,7 +116,7 @@ export default function ScheduleConfig() {
               value={interval}
               min={5}
               step={5}
-              placeholder="Ex: 30" // 👈 só aparece quando vazio
+              placeholder="Ex: 30"
               onChange={(e) =>
                 setInterval(e.target.value === '' ? '' : Number(e.target.value))
               }
@@ -127,6 +137,12 @@ export default function ScheduleConfig() {
             ))}
           </div>
         </S.DaysSelector>
+
+        {error && (
+          <p style={{ color: 'red', marginTop: 12, fontSize: '0.9rem' }}>
+            {error}
+          </p>
+        )}
 
         <S.Actions>
           <Button onClick={generateSlots}>Gerar horários</Button>

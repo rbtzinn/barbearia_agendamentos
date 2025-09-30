@@ -13,15 +13,22 @@ export default function BarberSetup() {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [phone, setPhone] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; msg: string } | null>(null);
 
   async function handleCreate() {
     if (!user) return;
     setLoading(true);
+    setFeedback(null);
     try {
-      const { id } = await createShop(user.uid, name, location);
-      navigate('/barber/schedule?shopId=' + id);
+      const { id } = await createShop(user.uid, name, location, phone, instagram);
+      setFeedback({ type: 'success', msg: 'Barbearia cadastrada com sucesso! ✅' });
+      setTimeout(() => {
+        navigate('/barber/schedule?shopId=' + id);
+      }, 1200);
     } catch (e: any) {
-      alert(e.message);
+      setFeedback({ type: 'error', msg: e.message });
     } finally {
       setLoading(false);
     }
@@ -42,8 +49,31 @@ export default function BarberSetup() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
+          <input
+            placeholder="Telefone (WhatsApp)"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <input
+            placeholder="Instagram (@barbearia)"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+          />
+
+          {feedback && (
+            <p
+              style={{
+                color: feedback.type === 'error' ? 'red' : 'green',
+                fontSize: '0.9rem',
+                marginTop: 8,
+              }}
+            >
+              {feedback.msg}
+            </p>
+          )}
+
           <Button onClick={handleCreate} disabled={loading || !name}>
-            Salvar
+            {loading ? 'Salvando...' : 'Salvar'}
           </Button>
         </S.FormGrid>
       </Card>

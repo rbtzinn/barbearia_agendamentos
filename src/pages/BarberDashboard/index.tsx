@@ -70,19 +70,27 @@ export default function BarberDashboard() {
                     <div>
                       {b.clientName} - {b.phone}
                     </div>
+
                     {b.status === 'cancelled' && (
-                      <S.CancelReason>Cancelado: {b.cancelReason}</S.CancelReason>
+                      <S.CancelReason>
+                        Cancelado: {b.cancelReason}
+                      </S.CancelReason>
+                    )}
+
+                    {b.status === 'done' && (
+                      <S.CancelReason style={{ color: 'green' }}>
+                        Concluído pelo cliente
+                      </S.CancelReason>
                     )}
                   </div>
-
                   <div className="actions">
-                    {b.status !== 'cancelled' && (
+                    {b.status !== 'cancelled' && b.status !== 'done' && (
                       <Button variant="danger" onClick={() => setCancelTarget(b)}>
                         Cancelar
                       </Button>
                     )}
 
-                    {b.status === 'cancelled' && (
+                    {(b.status === 'cancelled' || b.status === 'done') && (
                       <button
                         className="trash"
                         onClick={() => setArchiveTarget(b)}
@@ -105,7 +113,12 @@ export default function BarberDashboard() {
           message={`Você está prestes a cancelar o horário de ${cancelTarget.date} às ${cancelTarget.time}.`}
           onCancel={() => setCancelTarget(null)}
           onConfirm={async () => {
-            await cancelBooking(shopId, cancelTarget.id, 'Cancelado pelo barbeiro', 'barber');
+            await cancelBooking(
+              shopId,
+              cancelTarget.id,
+              'Cancelado pelo barbeiro',
+              'barber',
+            );
             setBookings((prev) =>
               prev.map((bk) =>
                 bk.id === cancelTarget.id

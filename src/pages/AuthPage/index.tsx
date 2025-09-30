@@ -8,6 +8,7 @@ import * as S from './styles';
 import PasswordInput from '@/components/PasswordInput';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/services/firebase';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function AuthPage() {
   const { user, role, ready, login, register } = useAuthStore();
@@ -19,6 +20,7 @@ export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState<string | null>(null);
 
   if (user) {
     const redirectRole = role || localRole;
@@ -63,7 +65,7 @@ export default function AuthPage() {
     try {
       setError(null);
       await sendPasswordResetEmail(auth, email);
-      alert('Enviamos um link de redefinição para o seu e-mail.');
+      setDialogMessage('Enviamos um link de redefinição para o seu e-mail.');
     } catch (e: any) {
       setError(e.message);
     }
@@ -135,6 +137,17 @@ export default function AuthPage() {
           </Button>
         </S.FormGrid>
       </Card>
+
+      {dialogMessage && (
+        <ConfirmDialog
+          title="Aviso"
+          message={dialogMessage}
+          onCancel={() => setDialogMessage(null)}
+          onConfirm={() => setDialogMessage(null)}
+          confirmLabel="OK"
+          simple
+        />
+      )}
     </Container>
   );
 }

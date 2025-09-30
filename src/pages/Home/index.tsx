@@ -2,8 +2,9 @@ import Container from '@/components/Container';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import { Link } from 'react-router-dom';
-import * as S from './styles';
 import { useAuthStore } from '@/stores/auth';
+import { FiUsers, FiScissors } from 'react-icons/fi';
+import * as S from './styles';
 
 export default function Home() {
   const { user, role } = useAuthStore();
@@ -11,43 +12,55 @@ export default function Home() {
   return (
     <Container>
       <Card>
-        <S.Header>Bem-vindo ao BarberBook ✂️</S.Header>
-        <S.IntroText>
-          O BarberBook é a plataforma ideal para conectar barbearias e clientes
-          de forma simples e moderna.
-        </S.IntroText>
+        {/* Hero Section */}
+        <S.Hero>
+          <h1>Agende seu corte em segundos ✂️</h1>
+          <p>
+            BarberBook conecta <strong>clientes</strong> e <strong>barbeiros</strong> 
+            em uma plataforma moderna e fácil de usar.
+          </p>
+          <S.HeroActions>
+            {!user ? (
+              <Link to="/auth">
+                <Button>Começar agora</Button>
+              </Link>
+            ) : role === 'client' ? (
+              <Link to="/client/bookings">
+                <Button>Meus Agendamentos</Button>
+              </Link>
+            ) : (
+              <Link to="/barber/dashboard">
+                <Button>Ir para o Painel</Button>
+              </Link>
+            )}
+          </S.HeroActions>
+        </S.Hero>
 
-        <S.FeatureList>
-          <li>
-            <strong>Clientes</strong>: encontram barbearias, agendam horários e
-            gerenciam suas reservas em um só lugar.
-          </li>
-          <li>
-            <strong>Barbeiros</strong>: gerenciam sua agenda, divulgam seu
-            trabalho e compartilham links de agendamento de forma prática.
-          </li>
-        </S.FeatureList>
+        {/* Features */}
+        <S.Features>
+          <S.FeatureCard>
+            <FiUsers size={32} />
+            <h3>Para Clientes</h3>
+            <p>Encontre barbearias próximas, agende horários e acompanhe seus cortes facilmente.</p>
+          </S.FeatureCard>
 
-        <p>
-          Para começar, basta criar sua conta ou fazer login. O processo é
-          rápido e unificado para todos os usuários.
-        </p>
+          <S.FeatureCard>
+            <FiScissors size={32} />
+            <h3>Para Barbeiros</h3>
+            <p>Gerencie sua agenda, compartilhe links de agendamento e organize seus clientes.</p>
+          </S.FeatureCard>
+        </S.Features>
 
-        <S.ButtonGroup>
-          {!user ? (
+        {/* CTA final */}
+        {!user && (
+          <S.CTA>
+            <h2>Pronto para começar?</h2>
+            <p>Crie sua conta e agende seu próximo corte agora mesmo.</p>
             <Link to="/auth">
-              <Button>Criar conta / Entrar</Button>
+              <Button>Cadastre-se grátis</Button>
             </Link>
-          ) : role === 'client' ? (
-            <Link to="/client/bookings">
-              <Button>Meus Agendamentos</Button>
-            </Link>
-          ) : (
-            <Link to="/barber/dashboard">
-              <Button>Ir para o Painel</Button>
-            </Link>
-          )}
-        </S.ButtonGroup>
+          </S.CTA>
+        )}
       </Card>
     </Container>
   );

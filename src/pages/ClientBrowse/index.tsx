@@ -25,6 +25,17 @@ export default function ClientBrowse() {
     }
   }
 
+  function formatWhatsApp(phone: string) {
+    // remove caracteres não numéricos
+    const clean = phone.replace(/\D/g, '');
+    return `https://wa.me/55${clean}`;
+  }
+
+  function formatInstagram(username: string) {
+    const clean = username.replace('@', '');
+    return `https://instagram.com/${clean}`;
+  }
+
   return (
     <Container>
       <S.Title>Barbearias</S.Title>
@@ -44,11 +55,31 @@ export default function ClientBrowse() {
       {error && <S.ErrorMessage>{error}</S.ErrorMessage>}
 
       {!loading && shops.length === 0 && <p>Nenhuma barbearia encontrada.</p>}
+
       {shops.map((shop) => (
         <S.ShopCard key={shop.id}>
           <S.ShopCardContent>
             <h3>{shop.name}</h3>
             <p>{shop.location}</p>
+
+            {shop.phone && (
+              <p>
+                📱{' '}
+                <a href={formatWhatsApp(shop.phone)} target="_blank" rel="noreferrer">
+                  {shop.phone}
+                </a>
+              </p>
+            )}
+
+            {shop.instagram && (
+              <p>
+                📷{' '}
+                <a href={formatInstagram(shop.instagram)} target="_blank" rel="noreferrer">
+                  {shop.instagram}
+                </a>
+              </p>
+            )}
+
             <Link to={`/s/${shop.slug}`}>
               <Button>Ver horários disponíveis</Button>
             </Link>

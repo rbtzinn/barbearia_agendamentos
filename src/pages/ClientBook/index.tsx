@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { bookSlot, listClientBookings } from '@/services/firestore';
 import { useAuthStore } from '@/stores/auth';
 import InputMask from 'react-input-mask';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import * as S from './styles';
 
 export default function ClientBook() {
@@ -21,63 +22,92 @@ export default function ClientBook() {
   const [phone, setPhone] = useState('');
   const [alreadyBookedHere, setAlreadyBookedHere] = useState(false);
   const [alreadyBookedOther, setAlreadyBookedOther] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [dialogMessage, setDialogMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
+    async function loadShopAndSchedule() {
       if (!shopId) return;
 
+      // carrega dados da barbearia
       const shopSnap = await getDoc(doc(db, 'shops', shopId));
       setShop(shopSnap.data());
 
+      // carrega horários semanais
       const schedSnap = await getDoc(doc(db, 'schedules', shopId));
       const weekly = (schedSnap.data() as any)?.weekly || {};
       const weekday = new Date(date + 'T00:00:00').getDay();
       const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       setTimes(weekly[map[weekday]] || []);
+    }
 
+    loadShopAndSchedule();
+  }, [shopId, date]);
+  
+  useEffect(() => {
+    async function loadBookings() {
+      if (!shopId) return;
+
+      // carrega agendamentos da barbearia
       const bookingsSnap = await getDocs(
         collection(db, 'shops', shopId, 'bookings'),
       );
       const allBookings = bookingsSnap.docs.map((d) => d.data() as any);
 
+      // horários ocupados do dia selecionado
       const bookedToday = allBookings
         .filter((b) => b.date === date && b.status !== 'cancelled')
         .map((b) => b.time);
       setBooked(bookedToday);
 
+      // checa agendamentos do usuário
       if (user) {
-        // verifica agendamento nesta barbearia
+        // nesta barbearia
         const hasBookingHere = allBookings.some(
-          (b) => b.clientEmail === user.email && b.status !== 'cancelled',
+          (b) =>
+            b.clientEmail === user.email &&
+            b.status !== 'cancelled' &&
+            b.status !== 'done',
         );
         setAlreadyBookedHere(hasBookingHere);
 
-        // verifica agendamento em qualquer outra barbearia
+        // em outras barbearias
         const allClientBookings = await listClientBookings(user.email || '');
         const hasOther = allClientBookings.some(
           (b) =>
             b.shopId !== shopId &&
             b.status !== 'cancelled' &&
-            b.status !== 'done'
+            b.status !== 'done',
         );
         setAlreadyBookedOther(hasOther);
       }
     }
-    load();
+
+    loadBookings();
   }, [shopId, date, user]);
+
+  function horaJaPassou(date: string, time: string) {
+    const agora = new Date();
+    const agendamento = new Date(`${date}T${time}:00`);
+    return agendamento < agora;
+  }
 
   async function confirm(t: string) {
     if (!user) {
-      alert('Você precisa estar logado para agendar.');
+      setDialogMessage('Você precisa estar logado para agendar.');
       return;
     }
     if (!phone.trim()) {
-      alert('Informe seu telefone de contato.');
+      setDialogMessage('Informe seu telefone de contato.');
+      return;
+    }
+    if (phone.replace(/\D/g, '').length < 11) {
+      setDialogMessage('Telefone inválido. Use o formato (99) 99999-9999.');
       return;
     }
     const today = toDateInputValue();
     if (date < today) {
-      alert('Não é possível agendar em uma data que já passou.');
+      setDialogMessage('Não é possível agendar em uma data que já passou.');
       return;
     }
 
@@ -91,9 +121,9 @@ export default function ClientBook() {
       );
       setBooked((prev) => [...prev, t]);
       setAlreadyBookedHere(true);
-      alert('Agendamento realizado!');
+      setDialogMessage('Agendamento realizado com sucesso!');
     } catch (e: any) {
-      alert(e.message);
+      setDialogMessage(e.message);
     }
   }
 
@@ -134,19 +164,20 @@ export default function ClientBook() {
             />
 
             <S.TimeGrid>
-              {times.length === 0 && (
-                <p>Nenhum horário disponível neste dia.</p>
-              )}
+              {times.length === 0 && <p>Nenhum horário disponível neste dia.</p>}
               {times.map((t) => {
                 const isBooked = booked.includes(t);
+                const isPast = horaJaPassou(date, t);
+                const disabled = isBooked || isPast;
+
                 return (
                   <Button
                     key={t}
                     onClick={() => confirm(t)}
-                    disabled={isBooked}
-                    variant={isBooked ? 'ghost' : 'default'}
+                    disabled={disabled}
+                    variant={disabled ? 'ghost' : 'default'}
                   >
-                    {t} {isBooked && '(ocupado)'}
+                    {t} {isBooked && '(ocupado)'} {isPast && !isBooked && '(já passou)'}
                   </Button>
                 );
               })}
@@ -154,6 +185,17 @@ export default function ClientBook() {
           </>
         )}
       </Card>
+
+      {dialogMessage && (
+        <ConfirmDialog
+          title="Aviso"
+          message={dialogMessage}
+          onCancel={() => setDialogMessage(null)}
+          onConfirm={() => setDialogMessage(null)}
+          confirmLabel="OK"
+          simple
+        />
+      )}
     </Container>
   );
 }

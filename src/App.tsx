@@ -11,6 +11,7 @@ import ShopPublic from './pages/ShopPublic';
 import Header from './components/Header';
 import { useAuthStore } from './stores/auth';
 import ClientBookings from './pages/ClientBookings';
+import BarberProfile from './pages/BarberProfile';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const user = useAuthStore((s) => s.user);
@@ -48,6 +49,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <ShareLink />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/barber/profile"
+          element={
+            <PrivateRoute>
+              <BarberProfile />
             </PrivateRoute>
           }
         />

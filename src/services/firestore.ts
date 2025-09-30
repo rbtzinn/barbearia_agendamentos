@@ -10,7 +10,6 @@ import {
   runTransaction,
   orderBy,
   updateDoc,
-  collectionGroup,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { nanoid } from 'nanoid';
@@ -22,6 +21,8 @@ export type Shop = {
   location: string;
   slug: string;
   createdAt: any;
+  phone?: string;
+  instagram?: string;
 };
 
 export type WeeklySchedule = {
@@ -33,6 +34,8 @@ export async function createShop(
   ownerId: string,
   name: string,
   location: string,
+  phone?: string,
+  instagram?: string
 ) {
   const slugBase = name
     .toLowerCase()
@@ -48,8 +51,10 @@ export async function createShop(
     id,
     ownerId,
     name,
-    location: location.trim().toLowerCase(), // 👈 sempre salvar lowercase
+    location: location.trim().toLowerCase(),
     slug,
+    phone: phone || null,
+    instagram: instagram || null,
     createdAt: serverTimestamp(),
   });
 
@@ -63,6 +68,14 @@ export async function setWeeklySchedule(
 ) {
   const ref = doc(db, 'schedules', shopId);
   await setDoc(ref, { shopId, weekly }, { merge: true });
+}
+
+// 🔹 Marcar agendamento como concluído
+export async function doneBooking(shopId: string, bookingId: string) {
+  const ref = doc(db, 'shops', shopId, 'bookings', bookingId);
+  await updateDoc(ref, {
+    status: 'done',
+  });
 }
 
 // 🔹 Buscar barbearia por dono
@@ -91,7 +104,7 @@ export async function listShopsByLocation(term: string) {
   return snap.docs.map((d) => d.data() as Shop);
 }
 
-// 🔹 Listar todas barbearias (admin/debug)
+// 🔹 Listar todas barbearias
 export async function listAllShops() {
   const q = query(collection(db, 'shops'), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
@@ -102,8 +115,8 @@ export type Booking = {
   archived: any;
   id: string;
   shopId: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:mm
+  date: string;
+  time: string;
   clientName: string;
   clientEmail: string;
   phone: string;
@@ -146,15 +159,13 @@ export async function bookSlot(
   return bookingId;
 }
 
+// 🔹 Arquivar agendamento
 export async function archiveBooking(shopId: string, bookingId: string) {
   const ref = doc(db, 'shops', shopId, 'bookings', bookingId);
-  await updateDoc(ref, {
-    archived: true,
-  });
+  await updateDoc(ref, { archived: true });
 }
 
-
-// 🔹 Listar reservas
+// 🔹 Listar agendamentos
 export async function listBookings(shopId: string) {
   const q = collection(db, 'shops', shopId, 'bookings');
   const snap = await getDocs(q);
@@ -162,7 +173,8 @@ export async function listBookings(shopId: string) {
     .map((d) => d.data() as Booking)
     .filter((b) => !b.archived);
 }
-// 🔹 Cancelar reserva
+
+// 🔹 Cancelar agendamento
 export async function cancelBooking(
   shopId: string,
   bookingId: string,
@@ -178,6 +190,7 @@ export async function cancelBooking(
   });
 }
 
+// 🔹 Listar agendamentos do cliente
 export async function listClientBookings(identifier: string) {
   const bookings: (Booking & { shopName: string })[] = [];
 
@@ -194,7 +207,8 @@ export async function listClientBookings(identifier: string) {
         (data.clientName === identifier ||
           data.phone === identifier ||
           data.clientEmail === identifier) &&
-        !data.archived
+        !data.archived &&
+        data.status !== 'done'
       ) {
         bookings.push({
           ...data,
@@ -206,5 +220,3 @@ export async function listClientBookings(identifier: string) {
   }
   return bookings;
 }
-
-

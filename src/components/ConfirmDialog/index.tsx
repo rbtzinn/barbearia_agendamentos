@@ -14,7 +14,7 @@ type ConfirmDialogProps = {
   currentTime?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  simple?: boolean; // 👈 NOVA PROP
+  simple?: boolean; // 👈 modo simples
 };
 
 export default function ConfirmDialog({
@@ -34,6 +34,7 @@ export default function ConfirmDialog({
   const [times, setTimes] = useState<string[]>([]);
   const [booked, setBooked] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -44,7 +45,9 @@ export default function ConfirmDialog({
       const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       setTimes(weekly[map[weekday]] || []);
 
-      const bookingsSnap = await getDocs(collection(db, 'shops', shopId, 'bookings'));
+      const bookingsSnap = await getDocs(
+        collection(db, 'shops', shopId, 'bookings'),
+      );
       const allBookings = bookingsSnap.docs.map((d) => d.data() as any);
       const bookedToday = allBookings
         .filter((b) => b.date === date && b.status !== 'cancelled')
@@ -55,13 +58,41 @@ export default function ConfirmDialog({
     load();
   }, [shopId, date]);
 
+  function validateAndConfirm() {
+    setError(null);
+
+    if (simple) {
+      onConfirm();
+      return;
+    }
+    if (!reason.trim()) {
+      setError('Informe o motivo.');
+      return;
+    }
+    if (date < toDateInputValue()) {
+      setError('Não é possível reagendar para uma data que já passou.');
+      return;
+    }
+    if (shopId && (!date || !selectedTime)) {
+      setError('Selecione o novo horário.');
+      return;
+    }
+    onConfirm(reason, date, selectedTime);
+  }
+
+  function horaJaPassou(date: string, time: string) {
+    const agora = new Date();
+    const agendamento = new Date(`${date}T${time}:00`);
+    return agendamento < agora;
+  }
+
   return (
     <S.Overlay>
       <S.Dialog>
         <h3>{title}</h3>
         <p>{message}</p>
 
-        {!simple && ( // 👈 só mostra textarea se NÃO for modo simples
+        {!simple && (
           <textarea
             placeholder="Motivo"
             value={reason}
@@ -69,8 +100,7 @@ export default function ConfirmDialog({
             style={{ width: '100%', minHeight: 80 }}
           />
         )}
-
-        {!simple && shopId && ( // 👈 só mostra seleção de datas/horários se NÃO for modo simples
+        {!simple && shopId && (
           <>
             <input
               type="date"
@@ -79,61 +109,47 @@ export default function ConfirmDialog({
               onChange={(e) => setDate(e.target.value)}
             />
 
-            <div style={{ marginTop: 10 }}>
-              {times.length === 0 && <p>Nenhum horário disponível neste dia.</p>}
+            <S.TimeGrid>
               {times.map((t) => {
                 const isOld = currentDate === date && currentTime === t;
                 const isBooked = booked.includes(t);
+                const isPast = horaJaPassou(date, t);
+                const disabled = isBooked || isOld || isPast;
+
+                let badge: JSX.Element | null = null;
+                if (isOld) {
+                  badge = <S.Badge variant="old">Atual</S.Badge>;
+                } else if (isBooked) {
+                  badge = <S.Badge variant="booked">Ocupado</S.Badge>;
+                } else if (isPast) {
+                  badge = <S.Badge variant="past">Passou</S.Badge>;
+                }
+
                 return (
-                  <button
+                  <S.TimeButton
                     key={t}
-                    disabled={isBooked || isOld}
-                    style={{
-                      margin: 4,
-                      padding: '6px 10px',
-                      borderRadius: 6,
-                      border: selectedTime === t ? '2px solid #7c3aed' : '1px solid #555',
-                      background: isOld
-                        ? '#333'
-                        : isBooked
-                        ? '#444'
-                        : '#222',
-                      color: isOld ? '#777' : isBooked ? '#999' : '#fff',
-                      textDecoration: isOld ? 'line-through' : 'none',
-                    }}
-                    onClick={() => setSelectedTime(t)}
+                    disabled={disabled}
+                    selected={selectedTime === t}
+                    onClick={() => !disabled && setSelectedTime(t)}
                   >
-                    {t} {isOld ? '(seu horário atual)' : isBooked ? '(ocupado)' : ''}
-                  </button>
+                    {t}
+                    {badge}
+                  </S.TimeButton>
                 );
               })}
-            </div>
+            </S.TimeGrid>
           </>
+        )}
+
+        {error && (
+          <p style={{ color: 'red', marginTop: 10, fontSize: '0.9rem' }}>
+            {error}
+          </p>
         )}
 
         <S.Actions>
           <S.CancelButton onClick={onCancel}>{cancelLabel}</S.CancelButton>
-          <S.ConfirmButton
-            onClick={() => {
-              if (simple) {
-                onConfirm();
-                return;
-              }
-              if (!reason.trim()) {
-                alert('Informe o motivo.');
-                return;
-              }
-              if (date < toDateInputValue()) {
-                alert('Não é possível reagendar para uma data que já passou.');
-                return;
-              }
-              if (shopId && (!date || !selectedTime)) {
-                alert('Selecione o novo horário.');
-                return;
-              }
-              onConfirm(reason, date, selectedTime);
-            }}
-          >
+          <S.ConfirmButton onClick={validateAndConfirm}>
             {confirmLabel}
           </S.ConfirmButton>
         </S.Actions>

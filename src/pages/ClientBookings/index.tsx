@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import Container from '@/components/Container';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import { listClientBookings, cancelBooking, bookSlot, archiveBooking } from '@/services/firestore';
+import {
+  listClientBookings,
+  cancelBooking,
+  bookSlot,
+  archiveBooking,
+  doneBooking,
+} from '@/services/firestore';
 import { useAuthStore } from '@/stores/auth';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { FiRefreshCw, FiTrash2 } from 'react-icons/fi';
@@ -38,6 +44,7 @@ export default function ClientBookings() {
   const [rescheduleTarget, setRescheduleTarget] = useState<any | null>(null);
   const [cancelTarget, setCancelTarget] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null); // 👈 feedback estilizado
 
   async function load() {
     if (!user) return;
@@ -106,7 +113,7 @@ export default function ClientBookings() {
       user!.displayName || user!.email || 'Cliente',
       rescheduleTarget.phone || ''
     );
-    alert('Horário reagendado com sucesso!');
+    setFeedback('Horário reagendado com sucesso! ✅'); // 👈 feedback
     setRescheduleTarget(null);
     await load();
   }
@@ -117,14 +124,13 @@ export default function ClientBookings() {
   }
 
   async function handleDone(b: any) {
+    await doneBooking(b.shopId, b.id);
     setBookings((prev) =>
       prev.map((bk) =>
-        bk.id === b.id
-          ? { ...bk, status: 'done' }
-          : bk,
+        bk.id === b.id ? { ...bk, status: 'done' } : bk,
       ),
     );
-    alert('Corte marcado como concluído!');
+    setFeedback('Corte marcado como concluído! 💈'); // 👈 feedback
   }
 
   function jaPassou(date: string, time: string) {
@@ -155,6 +161,12 @@ export default function ClientBookings() {
           </button>
         </S.HeaderRow>
 
+        {feedback && (
+          <p style={{ color: 'green', fontSize: '0.9rem', marginBottom: 12 }}>
+            {feedback}
+          </p>
+        )}
+
         {bookings.length === 0 && <p>Nenhum agendamento encontrado.</p>}
         <S.List>
           {bookings.map((b) => (
@@ -171,6 +183,11 @@ export default function ClientBookings() {
                     Cancelado pelo {traduzCancelador(b.cancelledBy)}: {b.cancelReason}
                   </S.CancelReason>
                 )}
+                {b.status === 'done' && (
+                  <S.CancelReason style={{ color: 'green' }}>
+                    Concluído
+                  </S.CancelReason>
+                )}
               </div>
 
               <div className="actions">
@@ -185,7 +202,6 @@ export default function ClientBookings() {
                     {jaPassou(b.date, b.time) && (
                       <Button
                         variant="default"
-                        className="done-btn"
                         onClick={() => handleDone(b)}
                       >
                         Corte feito
@@ -194,7 +210,7 @@ export default function ClientBookings() {
                   </>
                 )}
 
-                {b.status === 'cancelled' && (
+                {(b.status === 'cancelled' || b.status === 'done') && (
                   <button
                     className="trash"
                     onClick={() => handleArchive(b)}

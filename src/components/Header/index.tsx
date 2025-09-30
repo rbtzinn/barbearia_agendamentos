@@ -28,7 +28,13 @@ export default function Header() {
     };
   }, [menuOpen]);
 
-  if (!ready) return null;
+  if (!ready) {
+    return (
+      <header style={{ padding: 16, textAlign: 'center' }}>
+        <span>Carregando...</span>
+      </header>
+    );
+  }
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -74,13 +80,22 @@ export default function Header() {
           )}
 
           {role === 'barber' && (
-            <NavLink
-              to="/barber/dashboard"
-              data-active={pathname.startsWith('/barber')}
-              onClick={closeMenu}
-            >
-              Barbeiro
-            </NavLink>
+            <>
+              <NavLink
+                to="/barber/dashboard"
+                data-active={pathname.startsWith('/barber/dashboard')}
+                onClick={closeMenu}
+              >
+                Painel
+              </NavLink>
+              <NavLink
+                to="/barber/profile"
+                data-active={pathname.startsWith('/barber/profile')}
+                onClick={closeMenu}
+              >
+                Minha Barbearia
+              </NavLink>
+            </>
           )}
         </Nav>
 
@@ -122,13 +137,22 @@ export default function Header() {
           )}
 
           {role === 'barber' && (
-            <NavLink
-              to="/barber/dashboard"
-              data-active={pathname.startsWith('/barber')}
-              onClick={closeMenu}
-            >
-              Barbeiro
-            </NavLink>
+            <>
+              <NavLink
+                to="/barber/dashboard"
+                data-active={pathname.startsWith('/barber/dashboard')}
+                onClick={closeMenu}
+              >
+                Painel
+              </NavLink>
+              <NavLink
+                to="/barber/profile"
+                data-active={pathname.startsWith('/barber/profile')}
+                onClick={closeMenu}
+              >
+                Minha Barbearia
+              </NavLink>
+            </>
           )}
         </Nav>
 
@@ -144,7 +168,14 @@ export default function Header() {
           {user ? (
             <>
               <span>Olá, {user.displayName || user.email}</span>
-              <button onClick={signOut}>Sair</button>
+              <button
+                onClick={async () => {
+                  await signOut();
+                  window.location.href = '/';
+                }}
+              >
+                Sair
+              </button>
             </>
           ) : (
             <NavLink to="/auth">Entrar</NavLink>
