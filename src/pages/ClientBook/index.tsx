@@ -6,8 +6,9 @@ import { toDateInputValue } from '@/utils/dates';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 import { useParams } from 'react-router-dom';
-import { bookSlot } from '@/services/firestore';
+import { bookSlot, listClientBookings } from '@/services/firestore';
 import { useAuthStore } from '@/stores/auth';
+import InputMask from 'react-input-mask';
 import * as S from './styles';
 
 export default function ClientBook() {
@@ -18,7 +19,8 @@ export default function ClientBook() {
   const [shop, setShop] = useState<any>(null);
   const [booked, setBooked] = useState<string[]>([]);
   const [phone, setPhone] = useState('');
-  const [alreadyBooked, setAlreadyBooked] = useState(false);
+  const [alreadyBookedHere, setAlreadyBookedHere] = useState(false);
+  const [alreadyBookedOther, setAlreadyBookedOther] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -33,24 +35,32 @@ export default function ClientBook() {
       const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       setTimes(weekly[map[weekday]] || []);
 
-      // pegar agendamentos existentes
       const bookingsSnap = await getDocs(
         collection(db, 'shops', shopId, 'bookings'),
       );
       const allBookings = bookingsSnap.docs.map((d) => d.data() as any);
 
-      // horários ocupados do dia
       const bookedToday = allBookings
         .filter((b) => b.date === date && b.status !== 'cancelled')
         .map((b) => b.time);
       setBooked(bookedToday);
 
-      // cliente já agendou nessa barbearia (qualquer data futura)
       if (user) {
-        const hasBooking = allBookings.some(
+        // verifica agendamento nesta barbearia
+        const hasBookingHere = allBookings.some(
           (b) => b.clientEmail === user.email && b.status !== 'cancelled',
         );
-        setAlreadyBooked(hasBooking);
+        setAlreadyBookedHere(hasBookingHere);
+
+        // verifica agendamento em qualquer outra barbearia
+        const allClientBookings = await listClientBookings(user.email || '');
+        const hasOther = allClientBookings.some(
+          (b) =>
+            b.shopId !== shopId &&
+            b.status !== 'cancelled' &&
+            b.status !== 'done'
+        );
+        setAlreadyBookedOther(hasOther);
       }
     }
     load();
@@ -65,6 +75,11 @@ export default function ClientBook() {
       alert('Informe seu telefone de contato.');
       return;
     }
+    const today = toDateInputValue();
+    if (date < today) {
+      alert('Não é possível agendar em uma data que já passou.');
+      return;
+    }
 
     try {
       await bookSlot(
@@ -74,6 +89,8 @@ export default function ClientBook() {
         user.displayName || user.email || 'Cliente',
         phone,
       );
+      setBooked((prev) => [...prev, t]);
+      setAlreadyBookedHere(true);
       alert('Agendamento realizado!');
     } catch (e: any) {
       alert(e.message);
@@ -85,7 +102,13 @@ export default function ClientBook() {
       <Card>
         <h2>Agendar: {shop?.name}</h2>
 
-        {alreadyBooked ? (
+        {alreadyBookedOther ? (
+          <p>
+            Você já possui um agendamento ativo em outra barbearia. Para agendar
+            aqui, é necessário cancelar primeiro em{' '}
+            <strong>Meus Agendamentos</strong>.
+          </p>
+        ) : alreadyBookedHere ? (
           <p>
             Você já agendou nesta barbearia. Para trocar de horário ou cancelar,
             vá para <strong>Meus Agendamentos</strong>.
@@ -96,11 +119,14 @@ export default function ClientBook() {
               <input
                 type="date"
                 value={date}
+                min={toDateInputValue()}
                 onChange={(e) => setDate(e.target.value)}
               />
             </S.DateSelector>
 
             <S.PhoneInput
+              as={InputMask}
+              mask="(99) 99999-9999"
               type="text"
               placeholder="Telefone (99) 99999-9999"
               value={phone}

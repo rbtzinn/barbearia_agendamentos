@@ -3,8 +3,11 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import { Link } from 'react-router-dom';
 import * as S from './styles';
+import { useAuthStore } from '@/stores/auth';
 
 export default function Home() {
+  const { user, role } = useAuthStore();
+
   return (
     <Container>
       <Card>
@@ -31,9 +34,19 @@ export default function Home() {
         </p>
 
         <S.ButtonGroup>
-          <Link to="/auth">
-            <Button>Criar conta / Entrar</Button>
-          </Link>
+          {!user ? (
+            <Link to="/auth">
+              <Button>Criar conta / Entrar</Button>
+            </Link>
+          ) : role === 'client' ? (
+            <Link to="/client/bookings">
+              <Button>Meus Agendamentos</Button>
+            </Link>
+          ) : (
+            <Link to="/barber/dashboard">
+              <Button>Ir para o Painel</Button>
+            </Link>
+          )}
         </S.ButtonGroup>
       </Card>
     </Container>

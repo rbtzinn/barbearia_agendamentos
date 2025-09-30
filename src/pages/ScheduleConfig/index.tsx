@@ -4,7 +4,7 @@ import Button from '@/components/Button';
 import { setWeeklySchedule, WeeklySchedule } from '@/services/firestore';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import DayToggle from '@/components/DayToggle'; // 1. IMPORTE O NOVO COMPONENTE
+import DayToggle from '@/components/DayToggle';
 import * as S from './styles';
 
 export default function ScheduleConfig() {
@@ -13,7 +13,7 @@ export default function ScheduleConfig() {
   const [weekly, setWeekly] = useState<WeeklySchedule>({});
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('18:00');
-  const [interval, setInterval] = useState(30);
+  const [interval, setInterval] = useState<number | ''>(''); // 👈 começa vazio
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const navigate = useNavigate();
 
@@ -28,6 +28,11 @@ export default function ScheduleConfig() {
   ] as const;
 
   function generateSlots() {
+    if (interval === '' || interval <= 0) {
+      alert('Informe um intervalo válido em minutos.');
+      return;
+    }
+
     const slots: string[] = [];
     let [h, m] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
@@ -52,6 +57,10 @@ export default function ScheduleConfig() {
   }
 
   async function save() {
+    if (interval === '' || interval <= 0) {
+      alert('Informe um intervalo válido em minutos.');
+      return;
+    }
     await setWeeklySchedule(shopId, weekly);
     navigate('/barber/share?shopId=' + shopId);
   }
@@ -97,7 +106,10 @@ export default function ScheduleConfig() {
               value={interval}
               min={5}
               step={5}
-              onChange={(e) => setInterval(Number(e.target.value))}
+              placeholder="Ex: 30" // 👈 só aparece quando vazio
+              onChange={(e) =>
+                setInterval(e.target.value === '' ? '' : Number(e.target.value))
+              }
             />
           </S.InputGroup>
         </S.FormGrid>
@@ -106,7 +118,6 @@ export default function ScheduleConfig() {
           <p>Dias da semana:</p>
           <div className="days-grid">
             {days.map(([k, label]) => (
-              // 2. SUBSTITUA O CHECKBOX PELO DAYTOGGLE
               <DayToggle
                 key={k}
                 label={label}
@@ -119,6 +130,7 @@ export default function ScheduleConfig() {
 
         <S.Actions>
           <Button onClick={generateSlots}>Gerar horários</Button>
+          <Button onClick={save}>Salvar</Button>
         </S.Actions>
 
         {Object.keys(weekly).length > 0 && (
@@ -138,10 +150,6 @@ export default function ScheduleConfig() {
             )}
           </S.Preview>
         )}
-
-        <S.Actions>
-          <Button onClick={save}>Salvar</Button>
-        </S.Actions>
       </Card>
     </Container>
   );

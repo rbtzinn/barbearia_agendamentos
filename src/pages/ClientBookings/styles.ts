@@ -10,8 +10,51 @@ export const List = styled.div`
 export const Item = styled(Card)<{ status?: string }>`
   padding: ${({ theme }) => theme.spacing.md};
   opacity: ${({ status }) => (status === 'cancelled' ? 0.6 : 1)};
-  display: grid;
-  gap: ${({ theme }) => theme.spacing.xs};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.xs};
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: ${({ theme }) => theme.spacing.sm};
+
+    .done-btn {
+      padding: 10px 16px;
+      font-weight: bold;
+    }
+
+    .trash {
+      background: transparent;
+      border: none;
+      color: ${({ theme }) => theme.colors.danger};
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        transform: scale(1.2);
+        color: ${({ theme }) => theme.colors.dangerHover || '#ff4444'};
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .actions {
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
 `;
 
 export const CancelReason = styled.p`
@@ -20,8 +63,21 @@ export const CancelReason = styled.p`
   font-size: 0.9rem;
 `;
 
-export const Actions = styled.div`
+export const HeaderRow = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-top: ${({ theme }) => theme.spacing.sm};
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 `;

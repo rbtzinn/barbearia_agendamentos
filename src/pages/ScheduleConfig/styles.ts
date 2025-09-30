@@ -24,8 +24,27 @@ export const InputGroup = styled.div`
     background: ${({ theme }) => theme.colors.surface};
     color: ${({ theme }) => theme.colors.text};
     font-size: 1rem;
+
+    /* Remove o estilo padrão do number */
+    &[type='number']::-webkit-inner-spin-button,
+    &[type='number']::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &[type='number'] {
+      -moz-appearance: textfield;
+    }
+
+    /* Customizações extras */
+    &:focus {
+      border-color: ${({ theme }) => theme.colors.primary};
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(187, 134, 252, 0.3);
+    }
   }
 `;
+
 
 export const DaysSelector = styled.div`
   margin: ${({ theme }) => theme.spacing.lg} 0;
@@ -43,10 +62,15 @@ export const DaysSelector = styled.div`
 `;
 
 export const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: ${({ theme }) => theme.spacing.lg};
+ display: flex;
+  flex-direction: column;
   gap: ${({ theme }) => theme.spacing.md};
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  width: 100%;
+
+  button {
+    width: 100%;
+  }
 
   @media (max-width: 768px) {
     flex-direction: column;

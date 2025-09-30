@@ -18,3 +18,18 @@ export const RoleSelect = styled.select`
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
 `;
+
+export const ForgotLink = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  margin-top: ${({ theme }) => theme.spacing.xs};
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;

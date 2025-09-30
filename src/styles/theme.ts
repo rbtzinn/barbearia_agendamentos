@@ -10,6 +10,7 @@ export const theme = {
     muted: '#999999',
     border: '#2c2c2c',
     danger: '#CF6679',
+    dangerHover: '#ff4444',
     soft: '#2A2A2A',
   },
   fonts: {

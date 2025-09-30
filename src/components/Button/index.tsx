@@ -1,14 +1,15 @@
 import { ReactNode } from 'react';
 import { StyledButton, Spinner } from './styles';
 
-interface ButtonProps {
-  children: ReactNode;
-  onClick?: () => void;
-  type?: 'button' | 'submit';
+export type ButtonProps = {
+  children: React.ReactNode;
   variant?: 'default' | 'ghost' | 'danger';
   loading?: boolean;
   disabled?: boolean;
-}
+  onClick?: () => void | Promise<void>;
+  type?: 'button' | 'submit' | 'reset';
+  className?: string;
+};
 
 export default function Button({
   children,

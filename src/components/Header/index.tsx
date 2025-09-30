@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Container,
   Nav,
@@ -37,112 +37,119 @@ export default function Header() {
       <MenuOverlay open={menuOpen} onClick={closeMenu} />
 
       <Container>
-        {/* Para o mobile, o MenuButton será posicionado corretamente com CSS */}
+        {/* Botão menu mobile */}
         <MenuButton onClick={() => setMenuOpen((s) => !s)}>
           <FiMenu />
         </MenuButton>
 
-        
-
-
         {/* NAV DESKTOP */}
-<Nav data-desktop>
-  <Link to="/" data-active={pathname === '/'} onClick={closeMenu}>
-    Início
-  </Link>
+        <Nav data-desktop>
+          <NavLink
+            to="/"
+            end
+            data-active={pathname === '/'}
+            onClick={closeMenu}
+          >
+            Início
+          </NavLink>
 
-  {role === 'client' && (
-    <>
-      <Link
-        to="/client"
-        data-active={pathname.startsWith('/client')}
-        onClick={closeMenu}
-      >
-        Buscar Barbearias
-      </Link>
-      <Link
-        to="/client/bookings"
-        data-active={pathname.startsWith('/client/bookings')}
-        onClick={closeMenu}
-      >
-        Meus Agendamentos
-      </Link>
-    </>
-  )}
+          {role === 'client' && (
+            <>
+              <NavLink
+                to="/client"
+                end
+                data-active={pathname === '/client'}
+                onClick={closeMenu}
+              >
+                Buscar Barbearias
+              </NavLink>
+              <NavLink
+                to="/client/bookings"
+                data-active={pathname.startsWith('/client/bookings')}
+                onClick={closeMenu}
+              >
+                Meus Agendamentos
+              </NavLink>
+            </>
+          )}
 
-  {role === 'barber' && (
-    <Link
-      to="/barber/dashboard"
-      data-active={pathname.startsWith('/barber')}
-      onClick={closeMenu}
-    >
-      Barbeiro
-    </Link>
-  )}
-</Nav>
+          {role === 'barber' && (
+            <NavLink
+              to="/barber/dashboard"
+              data-active={pathname.startsWith('/barber')}
+              onClick={closeMenu}
+            >
+              Barbeiro
+            </NavLink>
+          )}
+        </Nav>
 
-{/* NAV MOBILE */}
-<Nav open={menuOpen} data-mobile>
-  <NavHeader>
-    <div className="brand-in-menu">
-      <Link to="/" onClick={closeMenu}>
-        BarberBook
-      </Link>
-    </div>
-    <MenuButton onClick={closeMenu}>
-      <FiX />
-    </MenuButton>
-  </NavHeader>
+        {/* NAV MOBILE */}
+        <Nav open={menuOpen} data-mobile>
+          <NavHeader>
+            <div className="brand-in-menu">
+              <NavLink to="/" end onClick={closeMenu}>
+                BarberBook
+              </NavLink>
+            </div>
+            <MenuButton onClick={closeMenu}>
+              <FiX />
+            </MenuButton>
+          </NavHeader>
 
-  <Link to="/" data-active={pathname === '/'} onClick={closeMenu}>
-    Início
-  </Link>
+          <NavLink to="/" end data-active={pathname === '/'} onClick={closeMenu}>
+            Início
+          </NavLink>
 
-  {role === 'client' && (
-    <>
-      <Link
-        to="/client"
-        data-active={pathname.startsWith('/client')}
-        onClick={closeMenu}
-      >
-        Buscar Barbearias
-      </Link>
-      <Link
-        to="/client/bookings"
-        data-active={pathname.startsWith('/client/bookings')}
-        onClick={closeMenu}
-      >
-        Meus Agendamentos
-      </Link>
-    </>
-  )}
+          {role === 'client' && (
+            <>
+              <NavLink
+                to="/client"
+                end
+                data-active={pathname === '/client'}
+                onClick={closeMenu}
+              >
+                Buscar Barbearias
+              </NavLink>
+              <NavLink
+                to="/client/bookings"
+                data-active={pathname.startsWith('/client/bookings')}
+                onClick={closeMenu}
+              >
+                Meus Agendamentos
+              </NavLink>
+            </>
+          )}
 
-  {role === 'barber' && (
-    <Link
-      to="/barber/dashboard"
-      data-active={pathname.startsWith('/barber')}
-      onClick={closeMenu}
-    >
-      Barbeiro
-    </Link>
-  )}
-</Nav>
-<Brand>
-          <Link to="/" onClick={closeMenu}>
+          {role === 'barber' && (
+            <NavLink
+              to="/barber/dashboard"
+              data-active={pathname.startsWith('/barber')}
+              onClick={closeMenu}
+            >
+              Barbeiro
+            </NavLink>
+          )}
+        </Nav>
+
+        {/* Brand */}
+        <Brand>
+          <NavLink to="/" end onClick={closeMenu}>
             BarberBook
-          </Link>
+          </NavLink>
         </Brand>
-<Actions>
+
+        {/* Actions */}
+        <Actions>
           {user ? (
             <>
               <span>Olá, {user.displayName || user.email}</span>
               <button onClick={signOut}>Sair</button>
             </>
           ) : (
-            <Link to="/auth">Entrar</Link>
+            <NavLink to="/auth">Entrar</NavLink>
           )}
         </Actions>
-
       </Container>
     </>
   );

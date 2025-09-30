@@ -27,7 +27,7 @@ export default function ClientBrowse() {
 
   return (
     <Container>
-      <h2>Barbearias</h2>
+      <S.Title>Barbearias</S.Title>
       <S.SearchBar>
         <S.SearchInput
           type="text"

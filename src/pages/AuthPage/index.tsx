@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth';
 import { Navigate } from 'react-router-dom';
 import * as S from './styles';
 import PasswordInput from '@/components/PasswordInput';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/services/firebase';
 
 export default function AuthPage() {
   const { user, role, ready, login, register } = useAuthStore();
@@ -42,8 +44,6 @@ export default function AuthPage() {
           setError('As senhas não conferem');
           return;
         }
-
-        // aqui não retorna cred, apenas aguarda
         await register(email, password, { name, role: localRole });
       } else {
         await login(email, password);
@@ -52,6 +52,20 @@ export default function AuthPage() {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setError('Informe seu e-mail para recuperar a senha.');
+      return;
+    }
+    try {
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
+      alert('Enviamos um link de redefinição para o seu e-mail.');
+    } catch (e: any) {
+      setError(e.message);
     }
   }
 
@@ -99,6 +113,12 @@ export default function AuthPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirme sua senha"
             />
+          )}
+
+          {!isRegister && (
+            <S.ForgotLink type="button" onClick={handleForgotPassword}>
+              Esqueci minha senha
+            </S.ForgotLink>
           )}
 
           {error && <S.ErrorMessage>{error}</S.ErrorMessage>}

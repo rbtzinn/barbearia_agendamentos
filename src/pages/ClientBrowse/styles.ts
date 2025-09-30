@@ -1,6 +1,10 @@
 import Card from '@/components/Card';
 import styled from 'styled-components';
 
+export const Title = styled.h2`
+  margin-bottom: 16px;
+`
+
 export const SearchBar = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm};
