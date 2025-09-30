@@ -62,9 +62,11 @@ export const TimeButton = styled.button<{ selected?: boolean; disabled?: boolean
   padding: ${({ theme }) => theme.spacing.sm};
   border-radius: ${({ theme }) => theme.borderRadius};
   border: ${({ selected, theme }) =>
-    selected ? `2px solid ${theme.colors.primary}` : `1px solid #444`};
-  background: ${({ selected }) => (selected ? '#2a1f4d' : '#1c1c1c')};
-  color: ${({ disabled }) => (disabled ? '#888' : '#fff')};
+    selected ? `2px solid ${theme.colors.primary}` : `1px solid ${theme.colors.border}`};
+  background: ${({ selected, theme }) =>
+    selected ? theme.colors.secondary : theme.colors.surface};
+  color: ${({ disabled, theme }) =>
+    disabled ? theme.colors.muted : theme.colors.text};
   font-weight: ${({ selected }) => (selected ? 'bold' : 500)};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   transition: all 0.2s;
@@ -75,7 +77,8 @@ export const TimeButton = styled.button<{ selected?: boolean; disabled?: boolean
   gap: 6px;
 
   &:hover {
-    background: ${({ disabled }) => (disabled ? '#1c1c1c' : '#2a2a2a')};
+    background: ${({ disabled, theme }) =>
+      disabled ? theme.colors.surface : theme.colors.soft};
   }
 `;
 

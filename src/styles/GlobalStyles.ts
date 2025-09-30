@@ -1,6 +1,5 @@
 // src/styles/GlobalStyles.ts
 import { createGlobalStyle } from 'styled-components';
-import { theme } from './theme';
 
 export const GlobalStyle = createGlobalStyle`
   * {
@@ -10,42 +9,42 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    background-color: ${theme.colors.background};
-    color: ${theme.colors.text};
-    font-family: ${theme.fonts.main};
+    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.text};
+    font-family: ${({ theme }) => theme.fonts.main};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, strong {
-    color: ${theme.colors.onSurface};
+    color: ${({ theme }) => theme.colors.onSurface};
   }
 
   p {
     line-height: 1.6;
-    color: ${theme.colors.text};
+    color: ${({ theme }) => theme.colors.text};
   }
 
   a {
-    color: ${theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
     text-decoration: none;
   }
 
   input,
   select,
   textarea {
-    background-color: ${theme.colors.soft};
-    border: 1px solid ${theme.colors.border};
-    color: ${theme.colors.text};
-    padding: ${theme.spacing.md};
-    border-radius: ${theme.borderRadius};
+    background-color: ${({ theme }) => theme.colors.soft};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.text};
+    padding: ${({ theme }) => theme.spacing.md};
+    border-radius: ${({ theme }) => theme.borderRadius};
     font-size: 1rem;
     width: 100%;
     resize: none;
 
     &:focus {
       outline: none;
-      border-color: ${theme.colors.primary};
+      border-color: ${({ theme }) => theme.colors.primary};
     }
   }
 `;

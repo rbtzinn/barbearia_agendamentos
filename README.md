@@ -1,57 +1,131 @@
-# BarberBook (React + Vite + TS + styled-components + Firebase)
+# 💈 BarberBook
 
-## Como rodar
+Sistema de agendamento online para barbearias, desenvolvido em **React + Vite + TypeScript** com **Firebase** (Auth + Firestore).  
+Permite que barbeiros cadastrem suas barbearias e clientes agendem horários de forma simples e prática.
 
-1. Crie um projeto no Firebase e habilite **Authentication** (Google e/ou Anônimo, se quiser).
-2. Crie o **Firestore** (modo produção) e as coleções serão criadas automaticamente:
-   - `shops` (docs com { id, ownerId, name, location, slug, createdAt })
-   - `schedules` (doc por shopId com { weekly })
-   - `shops/{shopId}/bookings` (subcoleção com `{date_time}` como id)
-3. Copie `.env.example` para `.env` e preencha os valores.
-4. `npm i`
-5. `npm run dev`
+---
 
-## Fluxo
+## ✨ Funcionalidades
 
-- **Barbeiro**
-  1. Login `/barber/login`
-  2. Cadastra barbearia `/barber/setup`
-  3. Configura horários `/barber/schedule`
-  4. Recebe link público `/barber/share` (ex.: `/s/{slug}`)
-  5. Vê agendamentos no **Dashboard** `/barber/dashboard`
-- **Cliente**
-  1. Identifica-se `/client/login` (nome + telefone)
-  2. Lista barbearias `/client`
-  3. Escolhe barbearia e data `/book/:shopId`
-  4. Seleciona horário disponível → cria booking e bloqueia o horário
+### 👤 Cliente
+- Cadastro/Login com e-mail e senha
+- Recuperação de senha
+- Buscar barbearias por localização
+- Visualizar informações da barbearia (nome, endereço, Instagram, WhatsApp)
+- Agendar horários disponíveis
+- Cancelar ou reagendar horários
+- Histórico de agendamentos concluídos/cancelados
 
-## Regras básicas de segurança (sugestão)
+### 💈 Barbeiro
+- Cadastro/Login com e-mail e senha
+- Cadastro de barbearia (nome, localização, telefone, Instagram)
+- Configuração de horários disponíveis (início, fim e intervalo)
+- Painel para visualizar agendamentos dos clientes
+- Marcar cortes como concluídos
+- Compartilhar link público da barbearia
 
-No Firestore Rules (exemplo simplificado, ajuste para produção):
+### 🎨 Extras
+- Tema **claro/escuro** com toggle no header
+- Máscara de telefone automática `(99) 99999-9999`
+- Dialogs estilizados para feedback (em vez de `alert`)
+- Bloqueio automático de horários já passados/ocupados
+- Links para contato direto com a barbearia (WhatsApp/Instagram)
 
-```rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /shops/{shopId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
-      match /bookings/{bookingId} {
-        allow read: if true;
-        allow create: if true; // endureça conforme necessário
-      }
-    }
-    match /schedules/{shopId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-  }
-}
-```
+---
 
-**Obs.:** endureça as regras de `bookings` para evitar abuso (ex.: apenas criar, sem atualizar/excluir).
+## 🛠️ Tecnologias
 
-## Estilo
+- **Frontend**
+  - React + Vite
+  - TypeScript
+  - Styled Components (com ThemeProvider e temas dark/light)
+  - React Router DOM
+  - Zustand (auth store)
+  - React Input Mask
 
-- Tema escuro com superfícies suaves e cantos arredondados.
-- `styled-components` em cada componente/página quando necessário.
+- **Backend**
+  - Firebase Authentication
+  - Firebase Firestore
+
+---
+
+## 📂 Estrutura de Pastas
+
+src/
+components/ # Componentes reutilizáveis (Header, Button, Card, etc.)
+pages/ # Páginas principais (AuthPage, BarberDashboard, ClientBook, etc.)
+services/ # Integração com Firebase (auth e firestore)
+stores/ # Zustand store (auth)
+styles/ # GlobalStyles e temas (darkTheme, lightTheme)
+utils/ # Funções utilitárias (datas, etc.)
+
+---
+
+## 🚀 Como rodar o projeto
+
+### 1. Clonar o repositório
+
+git clone https://github.com/rbtzin/barberbook.git
+cd barberbook
+
+2. Instalar dependências
+
+npm install
+
+3. Configurar Firebase
+
+Crie um arquivo .env na raiz do projeto com suas credenciais do Firebase:
+
+VITE_FIREBASE_API_KEY=xxxx
+VITE_FIREBASE_AUTH_DOMAIN=xxxx.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=xxxx
+VITE_FIREBASE_STORAGE_BUCKET=xxxx.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=xxxx
+VITE_FIREBASE_APP_ID=xxxx
+
+4. Rodar em desenvolvimento
+npm run dev
+Acesse em http://localhost:5173
+
+5. Build para produção
+npm run build
+🔑 Fluxos de Uso
+Fluxo do Barbeiro
+Login ou Cadastro → Escolher Sou Barbeiro
+
+Cadastrar a barbearia (nome, localização, telefone, Instagram)
+
+Configurar os horários semanais
+
+Compartilhar o link público com os clientes
+
+Gerenciar agendamentos no Painel do Barbeiro
+
+Fluxo do Cliente
+Login ou Cadastro → Escolher Sou Cliente
+
+Buscar barbearias por bairro/cidade
+
+Selecionar barbearia e visualizar horários disponíveis
+
+Escolher um horário e confirmar
+
+Acompanhar seus agendamentos em Meus Agendamentos
+
+🌙 Tema Dark/Light
+O usuário pode alternar entre tema escuro e claro pelo botão no Header.
+
+A preferência fica salva no localStorage.
+
+📌 To-Do / Melhorias Futuras
+Upload de foto da barbearia
+
+Notificações por e-mail/WhatsApp
+
+Dashboard com estatísticas (quantidade de clientes, cortes concluídos etc.)
+
+Testes unitários e integração (Vitest/React Testing Library)
+
+👨‍💻 Autor
+Projeto desenvolvido por Roberto Gabriel Araujo Miranda
+📌 Focado em React, Firebase e boas práticas de UI/UX.

@@ -10,9 +10,14 @@ import {
 } from './styles';
 import { useAuthStore } from '@/stores/auth';
 import { useState, useEffect } from 'react';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { FiMenu, FiX, FiSun, FiMoon } from 'react-icons/fi';
 
-export default function Header() {
+type HeaderProps = {
+  isDark: boolean;
+  setIsDark: (val: boolean) => void;
+};
+
+export default function Header({ isDark, setIsDark }: HeaderProps) {
   const { pathname } = useLocation();
   const { user, role, signOut, ready } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,12 +55,7 @@ export default function Header() {
 
         {/* NAV DESKTOP */}
         <Nav data-desktop>
-          <NavLink
-            to="/"
-            end
-            data-active={pathname === '/'}
-            onClick={closeMenu}
-          >
+          <NavLink to="/" end data-active={pathname === '/'} onClick={closeMenu}>
             Início
           </NavLink>
 
@@ -154,6 +154,24 @@ export default function Header() {
               </NavLink>
             </>
           )}
+
+          {/* Toggle no mobile */}
+          <button
+            onClick={() => setIsDark(!isDark)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              marginTop: 16,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              cursor: 'pointer',
+              color: 'inherit',
+            }}
+          >
+            {isDark ? <FiSun /> : <FiMoon />}
+            {isDark ? 'Modo Claro' : 'Modo Escuro'}
+          </button>
         </Nav>
 
         {/* Brand */}
@@ -165,6 +183,20 @@ export default function Header() {
 
         {/* Actions */}
         <Actions>
+          {/* Toggle no desktop */}
+          <button
+            onClick={() => setIsDark(!isDark)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              marginRight: 12,
+              color: 'inherit',
+            }}
+          >
+            {isDark ? <FiSun /> : <FiMoon />}
+          </button>
+
           {user ? (
             <>
               <span>Olá, {user.displayName || user.email}</span>

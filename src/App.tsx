@@ -13,15 +13,30 @@ import { useAuthStore } from './stores/auth';
 import ClientBookings from './pages/ClientBookings';
 import BarberProfile from './pages/BarberProfile';
 
+import { ThemeProvider } from 'styled-components';
+import { GlobalStyle } from './styles/GlobalStyles';
+import { darkTheme, lightTheme } from './styles/theme';
+import { useState, useEffect } from 'react';
+
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const user = useAuthStore((s) => s.user);
   return user ? children : <Navigate to="/auth" replace />;
 }
 
 export default function App() {
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true; // padrão dark
+  });
+
+  useEffect(() => {
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
   return (
-    <>
-      <Header />
+    <ThemeProvider theme={isDark ? darkTheme : lightTheme}>
+      <GlobalStyle />
+      <Header isDark={isDark} setIsDark={setIsDark} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<AuthPage />} />
@@ -74,6 +89,6 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ThemeProvider>
   );
 }

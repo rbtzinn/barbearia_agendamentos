@@ -4,8 +4,8 @@ export const Container = styled.header`
   position: sticky;
   top: 0;
   z-index: 50;
-  background: #0c0e14;
-  border-bottom: 1px solid var(--border);
+  background: ${({ theme }) => theme.colors.surface}; 
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -14,7 +14,7 @@ export const Container = styled.header`
   @media (max-width: 768px) {
     padding: 12px 14px;
   }
-`
+`;
 
 export const Brand = styled.div`
   font-weight: 800;
