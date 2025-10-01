@@ -1,10 +1,8 @@
 import Container from '@/components/Container';
-import Card from '@/components/Card';
-import Button from '@/components/Button';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getShopBySlug } from '@/services/firestore';
-import * as S from './styles';
+import ShopPublicCard from '@/components/ShopPublicCard';
 
 export default function ShopPublic() {
   const { slug } = useParams();
@@ -18,19 +16,13 @@ export default function ShopPublic() {
   if (!shop)
     return (
       <Container>
-        <Card>Carregando...</Card>
+        <ShopPublicCard id="" name="Carregando..." location="" />
       </Container>
     );
 
   return (
     <Container>
-      <Card>
-        <h2>{shop.name}</h2>
-        <S.LocationText>{shop.location}</S.LocationText>
-        <Link to={`/book/${shop.id}`}>
-          <Button>Agendar</Button>
-        </Link>
-      </Card>
+      <ShopPublicCard id={shop.id} name={shop.name} location={shop.location} />
     </Container>
   );
 }

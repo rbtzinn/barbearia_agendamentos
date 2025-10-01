@@ -28,3 +28,7 @@ export const PhoneInput = styled.input`
     border-color: ${({ theme }) => theme.colors.primary};
   }
 `;
+
+export const NameAnonimousInput = styled.input`
+  margin-top: ${({ theme }) => theme.spacing.md};
+`

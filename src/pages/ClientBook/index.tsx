@@ -5,64 +5,60 @@ import Button from '@/components/Button';
 import { toDateInputValue } from '@/utils/dates';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { bookSlot, listClientBookings } from '@/services/firestore';
 import { useAuthStore } from '@/stores/auth';
 import InputMask from 'react-input-mask';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import * as S from './styles';
+import { NameAnonimousInput } from './styles';
 
 export default function ClientBook() {
   const { shopId } = useParams();
   const { user } = useAuthStore();
+
   const [date, setDate] = useState(toDateInputValue());
   const [times, setTimes] = useState<string[]>([]);
   const [shop, setShop] = useState<any>(null);
   const [booked, setBooked] = useState<string[]>([]);
   const [phone, setPhone] = useState('');
+  const [anonName, setAnonName] = useState('');
   const [alreadyBookedHere, setAlreadyBookedHere] = useState(false);
   const [alreadyBookedOther, setAlreadyBookedOther] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+  const [anonBooked, setAnonBooked] = useState(false);
 
+  // Carrega barbearia e horários semanais
   useEffect(() => {
     async function loadShopAndSchedule() {
       if (!shopId) return;
 
-      // carrega dados da barbearia
       const shopSnap = await getDoc(doc(db, 'shops', shopId));
       setShop(shopSnap.data());
 
-      // carrega horários semanais
       const schedSnap = await getDoc(doc(db, 'schedules', shopId));
       const weekly = (schedSnap.data() as any)?.weekly || {};
       const weekday = new Date(date + 'T00:00:00').getDay();
       const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
       setTimes(weekly[map[weekday]] || []);
     }
-
     loadShopAndSchedule();
   }, [shopId, date]);
-  
+
+  // Carrega agendamentos já feitos (restrições só se logado)
   useEffect(() => {
     async function loadBookings() {
       if (!shopId) return;
 
-      // carrega agendamentos da barbearia
-      const bookingsSnap = await getDocs(
-        collection(db, 'shops', shopId, 'bookings'),
-      );
+      const bookingsSnap = await getDocs(collection(db, 'shops', shopId, 'bookings'));
       const allBookings = bookingsSnap.docs.map((d) => d.data() as any);
 
-      // horários ocupados do dia selecionado
       const bookedToday = allBookings
         .filter((b) => b.date === date && b.status !== 'cancelled')
         .map((b) => b.time);
       setBooked(bookedToday);
 
-      // checa agendamentos do usuário
       if (user) {
-        // nesta barbearia
         const hasBookingHere = allBookings.some(
           (b) =>
             b.clientEmail === user.email &&
@@ -71,7 +67,6 @@ export default function ClientBook() {
         );
         setAlreadyBookedHere(hasBookingHere);
 
-        // em outras barbearias
         const allClientBookings = await listClientBookings(user.email || '');
         const hasOther = allClientBookings.some(
           (b) =>
@@ -82,7 +77,6 @@ export default function ClientBook() {
         setAlreadyBookedOther(hasOther);
       }
     }
-
     loadBookings();
   }, [shopId, date, user]);
 
@@ -93,35 +87,38 @@ export default function ClientBook() {
   }
 
   async function confirm(t: string) {
-    if (!user) {
-      setDialogMessage('Você precisa estar logado para agendar.');
-      return;
-    }
-    if (!phone.trim()) {
-      setDialogMessage('Informe seu telefone de contato.');
-      return;
-    }
-    if (phone.replace(/\D/g, '').length < 11) {
-      setDialogMessage('Telefone inválido. Use o formato (99) 99999-9999.');
-      return;
-    }
     const today = toDateInputValue();
+
     if (date < today) {
       setDialogMessage('Não é possível agendar em uma data que já passou.');
       return;
     }
 
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 11) {
+      setDialogMessage('Telefone inválido. Use o formato (99) 99999-9999.');
+      return;
+    }
+
+    const clientName = user ? (user.displayName || user.email || 'Cliente') : anonName;
+    if (!clientName.trim()) {
+      setDialogMessage('Informe seu nome.');
+      return;
+    }
+
     try {
-      await bookSlot(
-        shopId!,
-        date,
-        t,
-        user.displayName || user.email || 'Cliente',
-        phone,
-      );
+      await bookSlot(shopId!, date, t, clientName, phone);
       setBooked((prev) => [...prev, t]);
-      setAlreadyBookedHere(true);
-      setDialogMessage('Agendamento realizado com sucesso!');
+
+      if (user) {
+        // fluxo logado: mantém mensagem padrão e bloqueia novos nessa barbearia
+        setAlreadyBookedHere(true);
+        setDialogMessage('Agendamento realizado com sucesso!');
+      } else {
+        // fluxo anônimo: mostra CTA para criar conta e ver seus agendamentos
+        setAnonBooked(true);
+        setDialogMessage(null);
+      }
     } catch (e: any) {
       setDialogMessage(e.message);
     }
@@ -132,11 +129,17 @@ export default function ClientBook() {
       <Card>
         <h2>Agendar: {shop?.name}</h2>
 
-        {alreadyBookedOther ? (
+        {/* Mensagem de sucesso para anônimo com CTA */}
+        {!user && anonBooked ? (
+          <p style={{ marginTop: 8 }}>
+            Agendamento concluído! 🎉 Se quiser ver, gerenciar ou cancelar seus agendamentos,
+            <br />
+            <Link to="/auth"><strong>crie uma conta</strong></Link> e acesse <strong>Meus Agendamentos</strong>.
+          </p>
+        ) : alreadyBookedOther ? (
           <p>
-            Você já possui um agendamento ativo em outra barbearia. Para agendar
-            aqui, é necessário cancelar primeiro em{' '}
-            <strong>Meus Agendamentos</strong>.
+            Você já possui um agendamento ativo em outra barbearia. Para agendar aqui,
+            é necessário cancelar primeiro em <strong>Meus Agendamentos</strong>.
           </p>
         ) : alreadyBookedHere ? (
           <p>
@@ -153,6 +156,16 @@ export default function ClientBook() {
                 onChange={(e) => setDate(e.target.value)}
               />
             </S.DateSelector>
+
+            {!user && (
+              <NameAnonimousInput
+                type="text"
+                placeholder="Seu nome"
+                value={anonName}
+                onChange={(e) => setAnonName(e.target.value)}
+                style={{ marginBottom: 8, padding: 8 }}
+              />
+            )}
 
             <S.PhoneInput
               as={InputMask}
