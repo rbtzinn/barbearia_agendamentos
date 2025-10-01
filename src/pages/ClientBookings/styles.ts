@@ -12,47 +12,49 @@ export const Item = styled(Card)<{ status?: string }>`
   opacity: ${({ status }) => (status === 'cancelled' ? 0.6 : 1)};
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing.md};
   min-width: 0;
-  overflow: hidden;   /* 👈 impede vazamento do conteúdo */
 
   .info {
     display: flex;
     flex-direction: column;
     gap: ${({ theme }) => theme.spacing.xs};
-    flex: 1;
-    min-width: 0;     /* 👈 permite o texto encolher */
   }
 
   .actions {
     display: flex;
-    flex-wrap: wrap;  /* 👈 se não couber, joga pra baixo */
-    align-items: stretch;
+    align-items: center;
     gap: ${({ theme }) => theme.spacing.sm};
-    max-width: 100%;
 
-    & > * {
-      flex: 1 1 auto;
-      min-height: 44px;  /* mesma altura */
+    button {
       display: flex;
       align-items: center;
       justify-content: center;
-      box-sizing: border-box;
+    }
+
+    .trash {
+      background: transparent;
+      border: none;
+      color: ${({ theme }) => theme.colors.danger};
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        transform: scale(1.2);
+        color: ${({ theme }) => theme.colors.dangerHover || '#ff4444'};
+      }
     }
   }
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
-    
-    .actions {
-      width: 100%;
 
-      & > * {
-        flex: 1;
-        width: 100%;
-      }
+    .actions {
+      justify-content: space-between;
+      width: 100%;
     }
   }
 `;
