@@ -75,6 +75,7 @@ export const Nav = styled.nav<{ open?: boolean }>`
       transform: ${({ open }) => (open ? 'translateX(0)' : 'translateX(-100%)')};
       transition: transform 0.3s ease;
       z-index: 30;
+      background: ${({ theme }) => theme.colors.surface}; 
 
       a {
         width: 100%;
