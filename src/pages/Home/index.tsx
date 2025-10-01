@@ -16,8 +16,7 @@ export default function Home() {
         <S.Hero>
           <h1>Agende seu corte em segundos ✂️</h1>
           <p>
-            BarberBook conecta <strong>clientes</strong> e <strong>barbeiros</strong> 
-            em uma plataforma moderna e fácil de usar.
+            BarberBook conecta <strong>clientes</strong> e <strong>barbeiros</strong> em uma plataforma moderna e fácil de usar.
           </p>
           <S.HeroActions>
             {!user ? (
