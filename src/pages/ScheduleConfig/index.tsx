@@ -1,9 +1,9 @@
 import Container from '@/components/Container';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
-import { setWeeklySchedule, WeeklySchedule } from '@/services/firestore';
+import { setWeeklySchedule, getWeeklySchedule, WeeklySchedule, removeWeeklySlot } from '@/services/firestore';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DayToggle from '@/components/DayToggle';
 import * as S from './styles';
 
@@ -13,9 +13,9 @@ export default function ScheduleConfig() {
   const [weekly, setWeekly] = useState<WeeklySchedule>({});
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('18:00');
-  const [interval, setInterval] = useState<number | ''>(''); 
+  const [interval, setInterval] = useState<number | ''>('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null); // 👈 estado de erro
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const days = [
@@ -27,6 +27,16 @@ export default function ScheduleConfig() {
     ['sat', 'Sábado'],
     ['sun', 'Domingo'],
   ] as const;
+
+  // 🔹 Carregar horários salvos no Firestore
+  useEffect(() => {
+    async function load() {
+      if (!shopId) return;
+      const saved = await getWeeklySchedule(shopId);
+      setWeekly(saved);
+    }
+    load();
+  }, [shopId]);
 
   function generateSlots() {
     setError(null);
@@ -52,11 +62,23 @@ export default function ScheduleConfig() {
       }
     }
 
-    const newWeekly = { ...weekly };
-    selectedDays.forEach((day) => {
-      newWeekly[day] = slots;
+    setWeekly((prev) => {
+      const updated = { ...prev };
+      selectedDays.forEach((day) => {
+        const existing = updated[day] || [];
+        updated[day] = Array.from(new Set([...existing, ...slots])).sort();
+      });
+      return updated;
     });
-    setWeekly(newWeekly);
+  }
+
+  async function removeSlot(day: string, slot: string) {
+    try {
+      const updated = await removeWeeklySlot(shopId, day, slot);
+      if (updated) setWeekly(updated); // sincroniza estado local
+    } catch (e: any) {
+      setError('Erro ao excluir horário: ' + e.message);
+    }
   }
 
   async function save() {
@@ -158,7 +180,22 @@ export default function ScheduleConfig() {
                   <strong>{label}:</strong>
                   <S.TimeSlotsGrid>
                     {weekly[k].map((t) => (
-                      <S.TimeSlot key={t}>{t}</S.TimeSlot>
+                      <S.TimeSlot key={t}>
+                        {t}
+                        <button
+                          onClick={() => removeSlot(k, t)}
+                          style={{
+                            marginLeft: 6,
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'red',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                          }}
+                        >
+                          ❌
+                        </button>
+                      </S.TimeSlot>
                     ))}
                   </S.TimeSlotsGrid>
                 </S.DayPreview>

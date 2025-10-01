@@ -220,3 +220,29 @@ export async function listClientBookings(identifier: string) {
   }
   return bookings;
 }
+
+// 🔹 Buscar horários semanais
+export async function getWeeklySchedule(shopId: string): Promise<WeeklySchedule> {
+  const ref = doc(db, 'schedules', shopId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return {};
+  return (snap.data().weekly || {}) as WeeklySchedule;
+}
+
+// 🔹 Excluir horário específico de um dia
+export async function removeWeeklySlot(shopId: string, day: string, slot: string) {
+  const ref = doc(db, 'schedules', shopId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const weekly = (snap.data().weekly || {}) as WeeklySchedule;
+  const updated = { ...weekly };
+
+  if (updated[day]) {
+    updated[day] = updated[day].filter((t) => t !== slot);
+  }
+
+  await updateDoc(ref, { weekly: updated });
+  return updated;
+}
