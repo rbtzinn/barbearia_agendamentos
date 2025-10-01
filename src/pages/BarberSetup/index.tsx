@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { createShop } from '@/services/firestore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import InputMask from 'react-input-mask';  // 👈 import aqui
 import * as S from './styles';
 
 export default function BarberSetup() {
@@ -22,7 +23,8 @@ export default function BarberSetup() {
     setLoading(true);
     setFeedback(null);
     try {
-      const { id } = await createShop(user.uid, name, location, phone, instagram);
+      const cleanPhone = phone.replace(/\D/g, '');
+      const { id } = await createShop(user.uid, name, location, cleanPhone, instagram);
       setFeedback({ type: 'success', msg: 'Barbearia cadastrada com sucesso! ✅' });
       setTimeout(() => {
         navigate('/barber/schedule?shopId=' + id);
@@ -32,6 +34,11 @@ export default function BarberSetup() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function isValidPhone(raw: string) {
+    const digits = raw.replace(/\D/g, '');
+    return digits.length === 11;
   }
 
   return (
@@ -49,11 +56,14 @@ export default function BarberSetup() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
-          <input
+          <InputMask
+            mask="(99) 99999-9999"
             placeholder="Telefone (WhatsApp)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-          />
+          >
+            {(inputProps: any) => <input {...inputProps} />}
+          </InputMask>
           <input
             placeholder="Instagram (@barbearia)"
             value={instagram}
@@ -72,7 +82,7 @@ export default function BarberSetup() {
             </p>
           )}
 
-          <Button onClick={handleCreate} disabled={loading || !name}>
+          <Button onClick={handleCreate} disabled={loading || !name || !isValidPhone(phone)}>
             {loading ? 'Salvando...' : 'Salvar'}
           </Button>
         </S.FormGrid>
